@@ -23,7 +23,7 @@ _start:
     ; setup disk read
     mov ch, 0   ; ch = cylinder 0
     mov cl, 3   ; cl = starting sector 2
-    mov al, 0x02    ; how many sectors to write
+    mov al, 0x04    ; how many sectors to write
 
     call LoadSectors ; load program into memory
     jmp JumpToKernel

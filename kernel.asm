@@ -59,94 +59,42 @@ _executeCommand:
     jne CM2
         inc esi
         mov edi, fileNameBuffer
-        mov bx, 0x1000
-        mov es, bx
-        mov bx, 0
 
         loadCommandInFileNameBuffer: ; puts the file name in a variable
             inc esi
             mov al, [esi]
             cmp al, 0
             mov byte [edi], '-'
-            je findFileInFilesystem
+            je findTheFile
             mov [edi], al
             inc edi
             jmp loadCommandInFileNameBuffer
+
+        findTheFile:
+        mov esi, fileNameBuffer
+        call FindFile
+
+        cmp al, 0
+        je fileNotFoundError
             
-        findFileInFilesystem: ; finds where in the filesystem the file is located
-            mov esi, fileNameBuffer
-            findStartOfNextFileDef:
-                cmp byte[es:bx], '|'
-                je compareNextChar
-                cmp byte[es:bx], 0
-                je fileNotFound
-                inc bx
-                jmp findStartOfNextFileDef
+        ; setup disk read
+        mov ch, 0   ; ch = cylinder 0
+        mov cl, bh   ; cl = starting sector
+        mov al, bl  ; al = how many sectors to write
 
-            compareNextChar:
-                inc bx
-                mov al, [esi]
-                cmp al, [es:bx]
-                jne findFileInFilesystem
-                cmp al, '-'
-                je runFile
-                inc esi
-                jmp compareNextChar
+        ; set es:bx memory address
+        mov bx, 0x9000
+        mov es, bx
+        mov bx, 0
 
+        call LoadSectors ; load program into memory
+        jmp JumpToProgram
+        
         fileNotFoundStr db "File not found, chek if the name is correct.",0
-        fileFoundStr db "File found in file list.",0
-        startingSectorStr db 0, 0, 0
-        lengthStr db 0, 0, 0
-        fileNotFound:
+        fileNotFoundError:
             mov esi, fileNotFoundStr
             call PrintString
-            jmp _executeCommandEnd
 
-        runFile:
-            mov esi, fileFoundStr
-            call PrintString
-
-            mov esi, startingSectorStr
-            inc bx
-            mov cl, [es:bx]
-            mov [esi], cl
-            inc bx
-            inc esi
-            mov cl, [es:bx]
-            mov [esi], cl
-
-            mov esi, lengthStr
-            add bx, 2
-            mov cl, [es:bx]
-            mov [esi], cl
-            inc bx
-            inc esi
-            mov cl, [es:bx]
-            mov [esi], cl
-
-            mov esi, startingSectorStr
-            mov edi, 2
-            call StringToNumber
-            mov [startingSectorStr], al
-
-            mov esi, lengthStr
-            mov edi, 2
-            call StringToNumber
-            mov [lengthStr], al
-
-            ; setup disk read
-            mov ch, 0   ; ch = cylinder 0
-            mov cl, [startingSectorStr]   ; cl = starting sector
-            mov al, [lengthStr]   ; al = how many sectors to write
-
-            ; set es:bx memory address
-            mov bx, 0x9000
-            mov es, bx
-            mov bx, 0
-
-            call LoadSectors ; load program into memory
-            jmp JumpToProgram
-        
     jmp _executeCommandEnd
 
     CM2:
@@ -215,12 +163,6 @@ _exit:
     jmp $
 
 ;;;
-;;; Functions and includes
-;;;
-    %include 'string_utils.asm'
-    %include 'math_utils.asm'
-    %include 'disk_utils.asm'
-;;;
 ;;; Commands
 ;;;
 Cm_help:
@@ -238,5 +180,13 @@ Cm_help:
     mov esp, ebp
     pop ebp
     ret
+
+;;;
+;;; Functions and includes
+;;;
+    %include 'string_utils.asm'
+    %include 'math_utils.asm'
+    %include 'disk_utils.asm'
+    %include 'fileSystem_utils.asm'
 
 times 512*4 -($-$$) db 0

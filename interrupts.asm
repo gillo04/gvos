@@ -21,12 +21,12 @@
 ;       0x04: Convert 16 bit number to decimal string [BX: number, ESI: pointer to where to store the string] - ([ESI]: string)
 ;       0x05: Convert 32 bit number to decimal string [EBX: number, ESI: pointer to where to store the string] - ([ESI]: string)
 ;      #0x06: Convert hex string to 8 bit number [ESI: pointer to string] - (BL: number, AL: set to 1 if error occurred)
-;      #0x07: Convert 8 bit number to hex string [BL: number, ESI: pointer to where to store the string] - ([ESI]: string)
+;       0x07: Convert 8 bit number to hex string [BL: number, ESI: pointer to where to store the string] - ([ESI]: string)
 ;   0xa2: File system operations
-;       0x00: Load sectors into memory [ES:BX: destination, CH: cylinder, CL: starting sector, AL: size]
-;      #0x01: Save memory section on disk [ES:BX: destination, CH: cylinder, CL: starting sector, AL: size]
-;       0x02: Get file info from file name [ESI: pointer to file name] - (CH: cylinder, CL: sector, AL: size)
-;   0xa3: Graphic interrupts            !NOT FINAL!
+;       0x00: Load sectors into memory [ES:BX: destination, CH: cylinder, CL: starting sector, AL: number of sectors]
+;      #0x01: Save memory section on disk [ES:BX: destination, CH: cylinder, CL: starting sector, AL: number of sectors]
+;       0x02: Get file info from file name [ESI: pointer to file name] - (CH: cylinder, CL: sector, AL: number of sectors)
+;   0xa3: Graphic interrupts            !NOT FINISHED!
 ;      #0x00: Enter graphic mode
 ;      #0x01: Exit grapich mode
 ;      #0x02: Fill a rectangle
@@ -177,6 +177,8 @@ intA1:
     je NumToDecStr16
     cmp ah, 0x05
     je NumToDecStr32
+    cmp ah, 0x07
+    je NumToHexStr8
     iret
 
 ;;; ------------------------0x00---------------------------
@@ -422,6 +424,32 @@ NumToDecStr32:
         cmp esi, edi
         jg NumToDecStr32_reverseString
     
+    iret
+
+;;; ------------------------0x06---------------------------
+
+
+;;; ------------------------0x07---------------------------
+NumToHexStr8:
+    mov cl, 0
+    NumToHexStr8_loop:
+        ror bl, 4
+        push bx
+        and bl, 0x0f
+        cmp bl, 9
+        jg NumToHexStr8_letter
+        add bl, 48
+        jmp NumToHexStr8_letter_end
+        NumToHexStr8_letter:
+        add bl, 65-10
+        NumToHexStr8_letter_end:
+        mov [esi], bl
+        pop bx
+        inc esi
+        inc cl
+        cmp cl, 2
+        jne NumToHexStr8_loop
+
     iret
 
 ;;; -------------------------------------------------------

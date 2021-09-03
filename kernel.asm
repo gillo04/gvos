@@ -114,7 +114,9 @@ _start:
                 mov esi, tempNumStr
                 mov al, [es:bx]
                 push bx
-                call NumberToString8
+                mov bl, al
+                mov ah, 0x03
+                int 0xa1        ; NumberToString8
                 mov esi, tempNumStr
                 mov ah, 0x00
                 int 0xa0
@@ -158,7 +160,9 @@ _start:
             mov esi, tempNumStr2
             mov al, [es:bx]
             push bx
-            call NumberToString8
+            mov bl, al
+            mov ah, 0x03
+            int 0xa1        ; NumberToString8
             mov esi, tempNumStr2
             mov ah, 0x00
             int 0xa0

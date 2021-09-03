@@ -2,10 +2,10 @@
 ;;;                       MEMORY MAP
 ;;; -------------------------------------------------------
 
-;       0x7c00 - 0x7dff [1 seg]: Bootloader
-;       0x7e00 - 0x81ff [2 seg]: System software interrupts
-;       0x8200 - 0x83ff [1 seg]: File list
-;       0x8400 - 0x8dff [5 seg]: Operating system
+;       0x7c00 - 0x7dff [1 sect]: Bootloader
+;       0x7e00 - 0x81ff [2 sect]: System software interrupts
+;       0x8200 - 0x83ff [1 sect]: File list
+;       0x8400 - 0x8dff [5 sect]: Operating system
 ;       =======================
 ;       0x10000 - 0x1ffff: Program memory
 

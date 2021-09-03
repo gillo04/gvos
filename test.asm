@@ -4,8 +4,17 @@ mov esi, msg
 mov ah, 0x00
 int 0xa0
 
-jmp $
+exitLoop:
+    mov ah, 0x01
+    int 0xa0
+    cmp al, 'x'
+    jne exitLoop
 
-msg db "This program is used to test functions."
+jmp JumpToKernel
+
+msg db 0x0d, 0x0a, "This program is used to test functions.",0x0d, 0x0a, "Press X to exit",0
+testStr db "00", 0
+
+%include "utils.asm"
 
 times 512 - ($ - $$) db 0

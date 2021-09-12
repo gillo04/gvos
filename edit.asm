@@ -193,7 +193,7 @@ hexInterpretation:
         je hexScrollDown
         cmp al, 'w'
         je hexScrollUp
-        cmp al, 'x'
+        cmp ax, 0x011b      ; Esc
         je _exit
         jmp hexInterpretation_mainLoop
         hexScrollDown:
@@ -267,7 +267,7 @@ asciiInterpretation:
     exitLoop:
         mov ah, 0x01
         int 0xa0
-        cmp al, 'x'
+        cmp ax, 0x011b      ; Esc
         jne exitLoop
 
 _exit:
@@ -280,6 +280,6 @@ prompt0 db "Insert the file you want to edit: ", 0x00
 fileNotFoundStr db 0x0d, 0x0a, "File not found, try again: ", 0x00
 prompt1 db 0x0d, 0x0a, "How do you want to view the file? (0: ascii, 1: hex)", 0x00
 header db "      00 01 02 03 04 05 06 07   08 09 0A 0B 0C 0D 0E 0F   _____ascii______",0x0d, 0x0a, 0x0d, 0x0a, 0
-commands db "X: quit | W: scroll up | S: scroll down                                         ", 0
+commands db "ESC: quit | W: scroll up | S: scroll down                                       ", 0
 
 times 512*2 - ($-$$) db 0x00

@@ -1,4 +1,5 @@
-org 0x8400
+%include "constants.asm"
+org KERNEL_ADDR
 
 jmp _start
 %include "utils.asm"
@@ -62,6 +63,10 @@ _start:
         mov bx, PROGRAM_SEGMENT
         mov es, bx
         mov bx, 0
+
+        mov dl, 0
+        mov dh, ch
+        mov ch, 0
 
         mov ah, 0x00
         int 0xa2        ; LoadSectors

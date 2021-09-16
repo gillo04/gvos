@@ -6,11 +6,13 @@ jmp _start
 %include "utils.asm"
 videoMode db 0
 _start:
-mov ah, 0x0f
-int 0x10
-mov [videoMode], al
+; mov ah, 0x0f
+; int 0x10
+; mov [videoMode], al
 
-call EnableGraphicMode
+; call EnableGraphicMode
+mov ah, 0x00
+int 0xb0
 
 EngineLoop:
     call ClearScreen
@@ -182,9 +184,12 @@ EngineLoop:
     jmp EngineLoop
 
 _exit:
-mov ah, 0x00
-mov al, [videoMode]
-int 0x10
+; mov ah, 0x00
+; mov al, [videoMode]
+; int 0x10
+mov ah, 0x01
+int 0xb0
+
 jmp JumpToKernel
 
 jmp $

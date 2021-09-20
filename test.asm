@@ -10,63 +10,23 @@ mov es, bx
 mov bx, 0x800
 
 mov dl, 0
-mov dh, ch
-mov ch, 0
 
 mov ah, 0x00
 int 0xa2        ; LoadSectors
 
-
 mov ah, 0x00
 int 0xb0
 
-mov ebx, (5 << 16) | 5
-mov esi, testStr
-mov edi, 0x800
-mov al, 0x28
-mov cx, 2
-mov dx, 11
-mov ah, 0x08
+
+mov esi, exampleGraphDef
+mov ah, 0x0a
 int 0xb0
 
-mov ebx, (30 << 16) | 5
-mov esi, testStr
-mov edi, 0x800
+mov ebx, 0
+mov ecx, (20 << 16) | 20
 mov al, 0x0f
-mov cx, 3
-mov dx, 16
-mov ah, 0x08
+mov ah, 0x02
 int 0xb0
-
-
-
-mov ebx, (100 << 16) | 20
-mov cx, 15
-mov dx, 1
-mov al, 0x30
-mov ah, 0x05
-int 0xb0
-
-mov ebx, (100 << 16) | 60
-mov cx, 15
-mov dx, 5
-mov al, 0x2a
-mov ah, 0x05
-int 0xb0
-
-mov ebx, (100 << 16) | 100
-mov cx, 15
-mov dx, 10
-mov al, 0x37
-mov ah, 0x05
-int 0xb0
-
-mov ebx, (100 << 16) | 200
-mov cx, 15
-mov al, 0x5c
-mov ah, 0x04
-int 0xb0
-
 
 exitLoop:
     mov ah, 0x01
@@ -80,24 +40,35 @@ jmp JumpToKernel
 
 jmp $
 
+exampleGraphDef:
+db 8
+    dw 20, 20
+    db 1
+db 6
+    dw 5, 5, 3, 15
+    db "HELLO WORLD", 0
+    dw 0x800
+    db 0x28
+    db 0
+db 7
+    dw 5, 40, 3
+    dw svg
+    db 0x28
+    db 0
+db 0
+    dw 0, 0, 10, 10
+    db 0
+    db 0xff
 
-
-
-; mov esi, msg
-; mov ah, 0x00
-; int 0xa0
-
-; exitLoop:
-;     mov ah, 0x01
-;     int 0xa0
-;     cmp al, 'x'
-;     jne exitLoop
-
-; jmp JumpToKernel
-
-; msg db 0x0d, 0x0a, "This program is used to test functions.",0x0d, 0x0a, "Press X to exit",0
-testStr db "HELLO WORLD", 0
-fontStr db "font", 0
+svg:
+db 3
+db 2, 0
+db 0, 3
+db 4, 3
+db 3
+db 0, 1
+db 1, 2
+db 2, 0
 
 %include "utils.asm"
 

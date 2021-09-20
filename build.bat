@@ -7,5 +7,6 @@ nasm -f bin doc.asm -o bin/doc.bin
 nasm -f bin -I ../ 3d/3d.asm -o bin/3d.bin
 nasm -f bin -I ../ calc/calc.asm -o bin/calc.bin
 nasm -f bin font.asm -o bin/font.bin
+nasm -f bin -I ../ game/game.asm -o bin/game.bin
 
-copy /b bin\boot.bin + bin\file_list.bin + bin\kernel.bin + bin\test.bin + bin\edit.bin + bin\doc.bin + bin\3d.bin + bin\calc.bin + bin\font.bin gvos3.img
+copy /b bin\boot.bin + bin\file_list.bin + bin\kernel.bin + bin\test.bin + bin\edit.bin + bin\doc.bin + bin\3d.bin + bin\calc.bin + bin\font.bin + bin\game.bin gvos3.img

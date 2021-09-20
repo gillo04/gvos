@@ -3,9 +3,9 @@
 ;;; -------------------------------------------------------
 
 ;       0x7c00 - 0x7dff [1 sect]: Bootloader
-;       0x7e00 - 0x85ff [4 sect]: System software interrupts
-;       0x8600 - 0x87ff [1 sect]: File list
-;       0x8800 - 0x91ff [5 sect]: Operating system
+;       0x7e00 - 0x8bff [7 sect]: System software interrupts
+;       0x8c00 - 0x8dff [1 sect]: File list
+;       0x8e00 - 0x97ff [5 sect]: Operating system
 ;       =======================
 ;       0x10000 - 0x1ffff: Program memory
 
@@ -24,7 +24,7 @@ _start:
     mov bx, 0x7e00
     mov ch, 0       ; Cylinder
     mov cl, 2       ; Starting sector
-    mov al, 4       ; Sectors to write
+    mov al, 7       ; Sectors to write
     call LoadSectorsBoot
 
     ; Edit the IVT
@@ -45,7 +45,7 @@ _start:
     mov es, ax
     mov bx, FILE_LIST_ADDR
     mov ch, 0       ; Cylinder
-    mov cl, 6       ; Starting sector
+    mov cl, 9       ; Starting sector
     mov al, 1       ; Sectors to write
     call LoadSectorsBoot
 
@@ -54,7 +54,7 @@ _start:
     mov es, ax
     mov bx, KERNEL_ADDR
     mov ch, 0       ; Cylinder
-    mov cl, 7       ; Starting sector
+    mov cl, 10      ; Starting sector
     mov al, 5       ; Sectors to write
     call LoadSectorsBoot
 

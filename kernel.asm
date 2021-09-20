@@ -65,8 +65,6 @@ _start:
         mov bx, 0
 
         mov dl, 0
-        mov dh, ch
-        mov ch, 0
 
         mov ah, 0x00
         int 0xa2        ; LoadSectors
@@ -129,7 +127,7 @@ _start:
                 inc bx
                 pop cx
                 inc cl
-                cmp cl, 0x03
+                cmp cl, 0x04
                 jl _printInfoNum
 
             cmp byte[es:bx], 0x00
@@ -175,7 +173,7 @@ _start:
             inc bx
             pop cx
             inc cl
-            cmp cl, 0x03
+            cmp cl, 0x04
             jl printInfoNum
 
         jmp _shellLoop

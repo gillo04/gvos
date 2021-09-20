@@ -6,7 +6,7 @@
 ;   #: not yet implemented
 
 ;   0xa0: I/O interrupts
-;       0x00: Print null terminated string              [ESI: pointer to string, ES: data segment of string]
+;       0x00: Print null terminated string              [ESI: pointer to string]
 ;       0x01: Get key press                             (AH: pressed key scan code, AL: pressed key ascii value)
 ;       0x02: Get input string                          [ESI: pointer to where to store the string, EDI: input length] - ([ESI]: inputted string)
 ;       0x03: New line
@@ -25,7 +25,7 @@
 ;   0xa2: File system operations
 ;       0x00: Load sectors into memory                  [ES:BX: destination, CH: cylinder, CL: starting sector, DH: head, DL: drive, AL: number of sectors]
 ;      #0x01: Save memory section on disk               [ES:BX: destination, CH: cylinder, CL: starting sector, AL: number of sectors]
-;       0x02: Get file info from file name              [ESI: pointer to file name] - (CH: cylinder, CL: sector, AL: number of sectors)
+;       0x02: Get file info from file name              [ESI: pointer to file name] - (DH: head, CH: cylinder, CL: sector, AL: number of sectors)
 ;   0xb0: Graphic interrupts
 ;       0x00: Enter graphic mode
 ;       0x01: Return to previous grapich mode
@@ -530,7 +530,7 @@ GetFileInfo:
     GetFileInfo_noMatch:
         pop esi
         pop bx
-        add bx, 13
+        add bx, 14
         cmp byte [es:bx], 0
         je GetFileInfo_notFound
         push bx
@@ -544,8 +544,9 @@ GetFileInfo:
 
         add bx, 10
         mov ch, [es:bx]
-        mov cl, [es:bx+1]
-        mov al, [es:bx+2]
+        mov dh, [es:bx+1]
+        mov cl, [es:bx+2]
+        mov al, [es:bx+3]
 
         jmp GetFileInfo_exit
 
@@ -579,8 +580,8 @@ intB0:
     je DrawText
     cmp ah, 0x09
     je DrawLine
-    ; cmp ah, 0x0a
-    ; je RenderDefinition
+    cmp ah, 0x0a
+    je RenderGraphicDef
     iret
 
 
@@ -627,11 +628,11 @@ FillRect:
 
     mov ax, [rectW]
     add ax, [rectX]
-    dec ax
+    ;dec ax
     mov [rectW], ax
     mov ax, [rectH]
     add ax, [rectY]
-    dec ax
+    ;dec ax
     mov [rectH], ax
 
     mov dx, [rectY]
@@ -722,14 +723,14 @@ StrokeRect:
             mov ax, [rectW]
             add ax, [rectX]
             add ax, [rectSW]
-            dec ax
+            ;dec ax
             inc cx
             cmp cx, ax
             jl StrokeRect_wLoop
         mov bx, [rectH]
         add bx, [rectY]
         add bx, [rectSW]
-        dec bx
+        ;dec bx
         inc dx
         cmp dx, bx
         jl StrokeRect_hLoop
@@ -1137,4 +1138,286 @@ MathAbs: ; AX: number
     MathAbs_exit:
     ret
 
-times 512*5 - ($-$$) db 0x00    ; 4 sectors + 1 to account for the bootloader size
+;;; ------------------------0x0a---------------------------
+; TYPES:
+;   0: Rectangle
+;       dw x, y, w, h
+;       db color
+;   1: Rectangle border
+;       dw x, y, w, h
+;       dw stroke_witdth
+;       db color
+;   2: Rectangle with border
+;       dw x, y, w, h
+;       dw stroke_witdth
+;       db inner_color, border_color
+;   3: Circle
+;       dw x, y, radius
+;       db color
+;   4: Circle border
+;       dw x, y, radius
+;       dw stroke_witdth
+;       db color
+;   5: Circle with border
+;       dw x, y, radius
+;       dw stroke_witdth
+;       db inner_color, border_color
+;   6: Text
+;       dw x, y, font_size, letter_spacing
+;       db "String", 0
+;       dw font_pointer
+;       db color
+;   7: Vector image
+;       dw x, y, unit_size
+;       dw image_pointer
+;       db color
+;   8: Empty item
+;       dw x, y
+
+; TAILS
+;   0: there are more elements
+;   1: the following elements are children
+;   2: last child
+;  ff: last element
+
+RenderGraphicDef:   ; esi: pointer to graphic definition
+    push ebp
+    mov ebp, esp
+    push dword 0
+
+    RenderGraphicDef_loop:
+    mov edi, esi
+
+    inc esi
+    mov bx, [esi]
+    add bx, [esp+2]
+    mov [gRefTmpX], bx
+    ror ebx, 16
+    add esi, 2
+    mov bx, [esi]
+    add bx, [esp]
+    mov [gRefTmpY], bx
+    ror ebx, 16
+
+    cmp byte[edi], 0
+    je RenderGraphicDef_draw_0
+    cmp byte[edi], 1
+    je RenderGraphicDef_draw_1
+    cmp byte[edi], 2
+    je RenderGraphicDef_draw_2
+    cmp byte[edi], 3
+    je RenderGraphicDef_draw_3
+    cmp byte[edi], 4
+    je RenderGraphicDef_draw_4
+    cmp byte[edi], 5
+    je RenderGraphicDef_draw_5
+    cmp byte[edi], 6
+    je RenderGraphicDef_draw_6
+    cmp byte[edi], 7
+    je RenderGraphicDef_draw_7
+    cmp byte[edi], 8
+    je RenderGraphicDef_draw_8
+    jmp RenderGraphicDef_exit
+
+    ; Shapes
+    RenderGraphicDef_draw_0:
+        add esi, 2
+        mov cx, [esi]
+        ror ecx, 16
+        add esi, 2
+        mov cx, [esi]
+        ror ecx, 16
+
+        add esi, 2
+        mov al, [esi]
+
+        mov ah, 0x02
+        int 0xb0
+
+        inc esi
+        jmp RenderGraphicDef_next
+
+    RenderGraphicDef_draw_1:
+        add esi, 2
+        mov cx, [esi]
+        ror ecx, 16
+        add esi, 2
+        mov cx, [esi]
+        ror ecx, 16
+
+        add esi, 2
+        mov dx, [esi]
+
+        add esi, 2
+        mov al, [esi]
+
+        mov ah, 0x03
+        int 0xb0
+
+        inc esi
+        jmp RenderGraphicDef_next
+
+    RenderGraphicDef_draw_2:
+        add esi, 2
+        mov cx, [esi]
+        ror ecx, 16
+        add esi, 2
+        mov cx, [esi]
+        ror ecx, 16
+
+        add esi, 4
+        mov al, [esi]
+
+        push ebx
+        push ecx
+        mov ah, 0x02
+        int 0xb0
+
+        pop ecx
+        pop ebx
+        mov dx, [esi-2]
+        inc esi
+        mov al, [esi]
+
+        mov ah, 0x03
+        int 0xb0
+
+        inc esi
+        jmp RenderGraphicDef_next
+
+    RenderGraphicDef_draw_3:
+        add esi, 2
+        mov cx, [esi]
+
+        add esi, 2
+        mov al, [esi]
+
+        mov ah, 0x04
+        int 0xb0
+
+        inc esi
+        jmp RenderGraphicDef_next
+
+    RenderGraphicDef_draw_4:
+        add esi, 2
+        mov cx, [esi]
+
+        add esi, 2
+        mov dx, [esi]
+
+        add esi, 2
+        mov al, [esi]
+
+        mov ah, 0x05
+        int 0xb0
+
+        inc esi
+        jmp RenderGraphicDef_next
+
+    RenderGraphicDef_draw_5:
+        add esi, 2
+        mov cx, [esi]
+
+        add esi, 4
+        mov al, [esi]
+
+        push ebx
+        push cx
+        mov ah, 0x04
+        int 0xb0
+
+        pop cx
+        pop ebx
+        mov dx, [esi-2]
+        inc esi
+        mov al, [esi]
+        
+        mov ah, 0x05
+        int 0xb0
+
+        inc esi
+        jmp RenderGraphicDef_next
+
+    RenderGraphicDef_draw_6:
+        add esi, 2
+        mov cx, [esi]
+        add esi, 2
+        mov dx, [esi]
+        add esi, 2
+
+        push esi
+        RenderGraphicDef_draw_6_loop:
+            inc esi
+            cmp byte[esi], 0
+            jne RenderGraphicDef_draw_6_loop
+        inc esi
+        xor edi, edi
+        mov di, [esi]
+
+        add esi, 2
+        mov al, [esi]
+        pop esi
+        
+        mov ah, 0x08
+        int 0xb0
+
+        add esi, 4
+        jmp RenderGraphicDef_next
+        
+    RenderGraphicDef_draw_7:
+        add esi, 2
+        mov cx, [esi]
+        add esi, 4
+        push esi
+        mov al, [esi]
+        sub esi, 2
+        mov di, [esi]
+        xor esi, esi
+        mov si, di
+
+        mov ah, 0x06
+        int 0xb0
+
+        pop esi
+        inc esi
+        jmp RenderGraphicDef_next
+
+    RenderGraphicDef_draw_8:
+        add esi, 2
+        jmp RenderGraphicDef_next
+
+    ; After drawing
+    RenderGraphicDef_next:
+    cmp byte[esi], 0
+    je RenderGraphicDef_continue
+    cmp byte[esi], 1
+    je RenderGraphicDef_setUpChildren
+    cmp byte[esi], 2
+    je RenderGraphicDef_exitParent
+    cmp byte[esi], 0xff
+    je RenderGraphicDef_exit
+
+    RenderGraphicDef_setUpChildren:
+        inc esi
+        push word[gRefTmpX]
+        push word[gRefTmpY]
+        jmp RenderGraphicDef_loop
+
+    RenderGraphicDef_exitParent:
+        inc esi
+        pop edi
+        jmp RenderGraphicDef_loop
+
+    RenderGraphicDef_continue:
+        inc esi
+        jmp RenderGraphicDef_loop
+
+    RenderGraphicDef_exit:
+    mov esp, ebp
+    pop ebp
+    iret
+
+    gRefTmpX dw 0
+    gRefTmpY dw 0
+
+times 512*8 - ($-$$) db 0x00    ; 4 sectors + 1 to account for the bootloader size

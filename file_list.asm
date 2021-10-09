@@ -1,11 +1,12 @@
 ;   name         cylinder | head | sector | size
-db "test      ", 0,         0,     15,      1
-db "edit      ", 0,         0,     16,      2
-db "doc       ", 0,         0,     18,      1
-db "3d        ", 0,         1,     1,       3
-db "calc      ", 0,         1,     4,       2
-db "font      ", 0,         1,     6,       4
-db "game      ", 0,         1,     10,      2
+db "test      ", 0,         0,      15,     1
+db "edit      ", 0,         0,      16,     2
+db "doc       ", 0,         0,      18,     1
+db "3d        ", 0,         1,      1,      3
+db "calc      ", 0,         1,      4,      2
+db "font      ", 0,         1,      6,      4
+db "game      ", 0,         1,      10,     2
+; db "cad       ", 0,         1,      12,     4
 
 ;  1: boot loader
 ;  2: interrupts
@@ -37,6 +38,9 @@ db "game      ", 0,         1,     10,      2
 ;  9: font
 ; 10: game
 ; 11: game
+; 12: cad
+; 13: cad
+; 14: cad
 
 
-times 512 - ($-$$) db 0x00
+times 512 * 2 - ($-$$) db 0x00

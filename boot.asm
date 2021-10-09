@@ -3,8 +3,8 @@
 ;;; -------------------------------------------------------
 
 ;       0x7c00 - 0x7dff [1 sect]: Bootloader
-;       0x7e00 - 0x8bff [7 sect]: System software interrupts
-;       0x8c00 - 0x8dff [1 sect]: File list
+;       0x7e00 - 0x7fff [1 sect]: File list
+;       0x8000 - 0x8dff [7 sect]: System software interrupts
 ;       0x8e00 - 0x97ff [5 sect]: Operating system
 ;       =======================
 ;       0x10000 - 0x1ffff: Program memory
@@ -21,9 +21,9 @@ _start:
     ; Load interrupts
     mov ax, 0
     mov es, ax
-    mov bx, 0x7e00
+    mov bx, 0x8000
     mov ch, 0       ; Cylinder
-    mov cl, 2       ; Starting sector
+    mov cl, 3       ; Starting sector
     mov al, 7       ; Sectors to write
     call LoadSectorsBoot
 
@@ -45,7 +45,7 @@ _start:
     mov es, ax
     mov bx, FILE_LIST_ADDR
     mov ch, 0       ; Cylinder
-    mov cl, 9       ; Starting sector
+    mov cl, 2       ; Starting sector
     mov al, 1       ; Sectors to write
     call LoadSectorsBoot
 
@@ -73,4 +73,5 @@ LoadSectorsBoot: ; ES:BX: destination, CH: cylinder, CL: starting sector, AL: si
 
 times 510 - ($-$$) db 0x00
 dw 0xaa55
-%include "interrupts.asm"
+%include "file_list.asm"
+%include "interrupts/interrupts.asm"
